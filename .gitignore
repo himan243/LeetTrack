@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local user data store (excluded — contains hashed passwords)
+/data/
+
+# allow env example but not actual env
+!.env.example
