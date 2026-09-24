@@ -38,6 +38,7 @@ const recommendations = problems.map((problem) => ({
 
 export default function DashboardClient({ username, leetcodeUsername, stats: initialStats, lastSyncedAt: initialLastSyncedAt }: { username: string; leetcodeUsername: string; stats?: LeetCodeStats; lastSyncedAt?: string }) {
   const [activeDifficulty, setActiveDifficulty] = useState('All')
+  const [activityRange, setActivityRange] = useState('12w')
   const [completed, setCompleted] = useState<number[]>([])
   const [isSyncing, startSync] = useTransition()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -69,7 +70,7 @@ export default function DashboardClient({ username, leetcodeUsername, stats: ini
   const milestoneProgress = Math.min((totalSolved / milestoneTarget) * 100, 100)
   const { currentStreak, bestStreak } = getStreaks(stats?.activityDates ?? [])
   const thisWeekSolved = countThisWeek(stats?.activityDates ?? [])
-  const activityGrid = buildActivityGrid(stats?.activityDates ?? [])
+  const { days: activityDays, months: activityMonths } = buildActivityGrid(stats?.activityDates ?? [], activityRange)
   const easyShare = totalSolved ? ((stats?.easySolved ?? 0) / totalSolved) * 100 : 0
   const mediumShare = totalSolved ? ((stats?.mediumSolved ?? 0) / totalSolved) * 100 : 0
   const hardShare = totalSolved ? ((stats?.hardSolved ?? 0) / totalSolved) * 100 : 0
@@ -213,17 +214,45 @@ export default function DashboardClient({ username, leetcodeUsername, stats: ini
                   <p className="section-kicker">Activity</p>
                   <h2>Your solving rhythm</h2>
                 </div>
-                <button className="select-button">
-                  Last 12 weeks <ChevronDown size={15} />
-                </button>
+                <select
+                  className="topic-select"
+                  value={activityRange}
+                  onChange={(e) => setActivityRange(e.target.value)}
+                  aria-label="Select activity timeline"
+                  style={{ height: '32px', fontSize: '11px', padding: '0 8px' }}
+                >
+                  <option value="1w">1 Week</option>
+                  <option value="4w">4 Weeks (1 Month)</option>
+                  <option value="12w">12 Weeks</option>
+                  <option value="6m">6 Months</option>
+                  <option value="1y">1 Year</option>
+                  <option value="2026">Year 2026</option>
+                  <option value="2025">Year 2025</option>
+                  <option value="all">All Time</option>
+                </select>
               </div>
               <div className="activity-grid-wrap">
-                <div className="activity-months" aria-hidden="true"><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div>
+                <div className="activity-months" aria-hidden="true">
+                  {activityMonths.map((m) => (
+                    <span key={m}>{m}</span>
+                  ))}
+                </div>
                 <div className="activity-grid" aria-label="GitHub-style activity grid showing accepted submissions">
-                  {activityGrid.map((day) => <span key={day.date} className={`activity-cell level-${day.level}`} title={`${day.date}: ${day.level ? 'Solved a problem' : 'No activity'}`} />)}
+                  {activityDays.map((day) => (
+                    <span
+                      key={day.date}
+                      className={`activity-cell level-${day.level}`}
+                      title={`${day.date}: ${day.level ? 'Solved a problem' : 'No activity'}`}
+                    />
+                  ))}
                 </div>
               </div>
-              <div className="chart-caption"><span><i className="legend-dot" /> Accepted activity</span><span>{stats?.activityDates?.length ?? 0} active days</span></div>
+              <div className="chart-caption">
+                <span>
+                  <i className="legend-dot" /> Accepted activity
+                </span>
+                <span>{stats?.activityDates?.length ?? 0} active days</span>
+              </div>
             </div>
 
             <div className="panel breakdown-panel">
@@ -397,19 +426,55 @@ function countThisWeek(activityDates: string[]) {
   return activityDates.filter((date) => date >= startDate && date <= endDate).length
 }
 
-function buildActivityGrid(activityDates: string[]) {
+function buildActivityGrid(activityDates: string[], range: string) {
   const activeDates = new Set(activityDates)
   const today = new Date()
-  const end = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
-  const start = new Date(end)
-  start.setUTCDate(start.getUTCDate() - 83)
+  let end = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+  let start = new Date(end)
 
-  return Array.from({ length: 84 }, (_, index) => {
+  if (range === '1w') {
+    start.setUTCDate(end.getUTCDate() - 6)
+  } else if (range === '4w') {
+    start.setUTCDate(end.getUTCDate() - 27)
+  } else if (range === '6m') {
+    start.setUTCDate(end.getUTCDate() - 179)
+  } else if (range === '1y') {
+    start.setUTCDate(end.getUTCDate() - 364)
+  } else if (range === '2026') {
+    start = new Date(Date.UTC(2026, 0, 1))
+    end = today.getUTCFullYear() === 2026 ? end : new Date(Date.UTC(2026, 11, 31))
+  } else if (range === '2025') {
+    start = new Date(Date.UTC(2025, 0, 1))
+    end = new Date(Date.UTC(2025, 11, 31))
+  } else if (range === 'all') {
+    const sorted = [...activityDates].sort()
+    const earliestStr = sorted.length > 0 ? sorted[0] : null
+    const earliest = earliestStr ? new Date(`${earliestStr}T00:00:00Z`) : new Date(Date.UTC(today.getUTCFullYear(), 0, 1))
+    start = new Date(Date.UTC(earliest.getUTCFullYear(), earliest.getUTCMonth(), 1))
+  } else {
+    // Default 12w (84 days)
+    start.setUTCDate(end.getUTCDate() - 83)
+  }
+
+  const daysCount = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1)
+  const days = Array.from({ length: daysCount }, (_, index) => {
     const date = new Date(start)
     date.setUTCDate(start.getUTCDate() + index)
     const formatted = date.toISOString().slice(0, 10)
-    return { date: formatted, level: activeDates.has(formatted) ? 1 : 0 }
+    const monthName = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' })
+    return { date: formatted, month: monthName, level: activeDates.has(formatted) ? 1 : 0 }
   })
+
+  const monthsSet = new Set<string>()
+  const months: string[] = []
+  days.forEach((day) => {
+    if (!monthsSet.has(day.month)) {
+      monthsSet.add(day.month)
+      months.push(day.month)
+    }
+  })
+
+  return { days, months }
 }
 
 function DifficultyRow({

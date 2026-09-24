@@ -218,7 +218,10 @@ h1, h2, h3, p { margin-top: 0; } h1 { margin-bottom: 15px; font-family: var(--fo
 :root[data-theme="dark"] .logout-button:hover,
 :root[data-theme="dark"] .logout-link { background: #3c2925; color: #f29a80; border-color: #5c3b35; }
 :root[data-theme="dark"] .icon-button:hover { background: #22332e; color: var(--ink); }
-:root[data-theme="dark"] .activity-cell { background: #1f2e29; }
+:root[data-theme="dark"] .activity-months { color: var(--muted); }
+:root[data-theme="dark"] .activity-cell { background: #243530; border: 1px solid #2e453e; }
+:root[data-theme="dark"] .activity-cell.level-1 { background: var(--mint); border-color: var(--mint); box-shadow: 0 0 8px rgba(128, 201, 176, 0.5); }
+
 :root[data-theme="dark"] .chart-wrap { border-color: var(--line); background-image: linear-gradient(to bottom, transparent 49%, #263631 50%, transparent 51%); }
 :root[data-theme="dark"] .bar { background: #398b75; }
 :root[data-theme="dark"] .bar-column:nth-child(6n+4) .bar,
