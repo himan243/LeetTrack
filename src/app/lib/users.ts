@@ -13,6 +13,7 @@ export type User = {
   createdAt: string
   leetcodeStats?: LeetCodeStats
   lastSyncedAt?: string
+  isAdmin?: boolean
 }
 
 export type LeetCodeStats = {
@@ -37,6 +38,7 @@ type UserRow = {
   created_at: string
   leetcode_stats?: LeetCodeStats
   last_synced_at?: string
+  is_admin?: boolean
 }
 
 function ensureDataDir() {
@@ -68,7 +70,16 @@ function fromRow(row: UserRow): User {
     createdAt: row.created_at,
     leetcodeStats: row.leetcode_stats,
     lastSyncedAt: row.last_synced_at,
+    isAdmin: row.is_admin ?? false,
   }
+}
+
+export function isUserAdmin(user?: User | null): boolean {
+  if (!user) return false
+  if (user.isAdmin === true) return true
+  if (user.username.toLowerCase() === 'admin') return true
+  const adminList = (process.env.ADMIN_USERNAMES ?? '').split(',').map((u) => u.trim().toLowerCase()).filter(Boolean)
+  return adminList.includes(user.username.toLowerCase())
 }
 
 export async function findUserByUsername(username: string): Promise<User | undefined> {
@@ -87,6 +98,15 @@ export async function findUserById(id: string): Promise<User | undefined> {
     return data ? fromRow(data as UserRow) : undefined
   }
   return readUsers().find((u) => u.id === id)
+}
+
+export async function getAllUsers(): Promise<User[]> {
+  if (hasDatabase) {
+    const { data, error } = await supabase!.from('users').select('*').order('created_at', { ascending: false })
+    if (error) throw error
+    return (data ?? []).map((row) => fromRow(row as UserRow))
+  }
+  return readUsers()
 }
 
 export async function updateUser(id: string, updates: Partial<Pick<User, 'leetcodeUsername' | 'leetcodeStats' | 'lastSyncedAt'>>): Promise<User | undefined> {
@@ -114,12 +134,14 @@ export async function createUser(
 ): Promise<User> {
   const passwordHash = await bcrypt.hash(password, 12)
   const id = crypto.randomUUID()
+  const isAdmin = username.toLowerCase() === 'admin' || (process.env.ADMIN_USERNAMES ?? '').split(',').map((u) => u.trim().toLowerCase()).includes(username.toLowerCase())
   if (hasDatabase) {
     const { data, error } = await supabase!.from('users').insert({
       id,
       username,
       password_hash: passwordHash,
       leetcode_username: leetcodeUsername,
+      is_admin: isAdmin,
     }).select('*').single()
     if (error) throw error
     return fromRow(data as UserRow)
@@ -131,6 +153,7 @@ export async function createUser(
     passwordHash,
     leetcodeUsername,
     createdAt: new Date().toISOString(),
+    isAdmin,
   }
   users.push(user)
   writeUsers(users)
@@ -140,3 +163,4 @@ export async function createUser(
 export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
   return bcrypt.compare(plain, hash)
 }
+

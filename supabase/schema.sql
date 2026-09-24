@@ -5,10 +5,13 @@ create table if not exists public.users (
   leetcode_username text not null default '',
   leetcode_stats jsonb,
   last_synced_at timestamptz,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  is_admin boolean not null default false
 );
 
+alter table public.users add column if not exists is_admin boolean not null default false;
 alter table public.users enable row level security;
 
 -- The app uses the server-only service role key for these queries.
 -- No client-side policy is needed for the current custom JWT session flow.
+
