@@ -48,7 +48,7 @@ type ProfileResponse = {
 
 export async function syncLeetCode(): Promise<SyncResult> {
   const session = await requireAuth()
-  const user = findUserById(session.userId)
+  const user = await findUserById(session.userId)
   const username = user?.leetcodeUsername?.trim()
 
   if (!username) {
@@ -98,7 +98,7 @@ export async function syncLeetCode(): Promise<SyncResult> {
       activityDates: [...new Set([...(user?.leetcodeStats?.activityDates ?? []), ...recentActivityDates])],
     }
     const syncedAt = new Date().toISOString()
-    updateUser(session.userId, { leetcodeStats: stats, lastSyncedAt: syncedAt })
+    await updateUser(session.userId, { leetcodeStats: stats, lastSyncedAt: syncedAt })
 
     return { ok: true, stats, syncedAt, username: matchedUser.username }
   } catch {

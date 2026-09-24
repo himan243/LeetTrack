@@ -8,7 +8,7 @@ import ThemeToggle from '@/app/theme-toggle'
 
 export default async function SettingsPage() {
   const session = await requireAuth()
-  const user = findUserById(session.userId)
+  const user = await findUserById(session.userId)
 
   return (
     <main className="settings-shell">

@@ -22,7 +22,12 @@ export async function login(_state: AuthState, formData: FormData): Promise<Auth
   }
   if (Object.keys(errors).length > 0) return { errors }
 
-  const user = findUserByUsername(username)
+  let user
+  try {
+    user = await findUserByUsername(username)
+  } catch {
+    return { errors: { form: ['Unable to reach the account database. Check the Supabase environment variables.'] } }
+  }
   if (!user) {
     return { errors: { form: ['No account found with that username.'] } }
   }
@@ -55,7 +60,12 @@ export async function signup(_state: AuthState, formData: FormData): Promise<Aut
 
   if (Object.keys(errors).length > 0) return { errors }
 
-  const existing = findUserByUsername(username)
+  let existing
+  try {
+    existing = await findUserByUsername(username)
+  } catch {
+    return { errors: { form: ['Unable to reach the account database. Check the Supabase environment variables.'] } }
+  }
   if (existing) {
     return { errors: { username: ['That username is already taken.'] } }
   }

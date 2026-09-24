@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import bcrypt from 'bcryptjs'
 import seedUsers from '../../../data/users.json'
+import { hasDatabase, supabase } from './database'
 
 export type User = {
   id: string
@@ -28,6 +29,15 @@ export type LeetCodeStats = {
 }
 
 const DATA_FILE = path.join(process.cwd(), 'data', 'users.json')
+type UserRow = {
+  id: string
+  username: string
+  password_hash: string
+  leetcode_username: string
+  created_at: string
+  leetcode_stats?: LeetCodeStats
+  last_synced_at?: string
+}
 
 function ensureDataDir() {
   const dir = path.dirname(DATA_FILE)
@@ -49,15 +59,46 @@ function writeUsers(users: User[]) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(users, null, 2), 'utf-8')
 }
 
-export function findUserByUsername(username: string): User | undefined {
+function fromRow(row: UserRow): User {
+  return {
+    id: row.id,
+    username: row.username,
+    passwordHash: row.password_hash,
+    leetcodeUsername: row.leetcode_username,
+    createdAt: row.created_at,
+    leetcodeStats: row.leetcode_stats,
+    lastSyncedAt: row.last_synced_at,
+  }
+}
+
+export async function findUserByUsername(username: string): Promise<User | undefined> {
+  if (hasDatabase) {
+    const { data, error } = await supabase!.from('users').select('*').ilike('username', username).maybeSingle()
+    if (error) throw error
+    return data ? fromRow(data as UserRow) : undefined
+  }
   return readUsers().find((u) => u.username.toLowerCase() === username.toLowerCase())
 }
 
-export function findUserById(id: string): User | undefined {
+export async function findUserById(id: string): Promise<User | undefined> {
+  if (hasDatabase) {
+    const { data, error } = await supabase!.from('users').select('*').eq('id', id).maybeSingle()
+    if (error) throw error
+    return data ? fromRow(data as UserRow) : undefined
+  }
   return readUsers().find((u) => u.id === id)
 }
 
-export function updateUser(id: string, updates: Partial<Pick<User, 'leetcodeUsername' | 'leetcodeStats' | 'lastSyncedAt'>>): User | undefined {
+export async function updateUser(id: string, updates: Partial<Pick<User, 'leetcodeUsername' | 'leetcodeStats' | 'lastSyncedAt'>>): Promise<User | undefined> {
+  if (hasDatabase) {
+    const databaseUpdates: Record<string, unknown> = {}
+    if (updates.leetcodeUsername !== undefined) databaseUpdates.leetcode_username = updates.leetcodeUsername
+    if (updates.leetcodeStats !== undefined) databaseUpdates.leetcode_stats = updates.leetcodeStats
+    if (updates.lastSyncedAt !== undefined) databaseUpdates.last_synced_at = updates.lastSyncedAt
+    const { data, error } = await supabase!.from('users').update(databaseUpdates).eq('id', id).select('*').maybeSingle()
+    if (error) throw error
+    return data ? fromRow(data as UserRow) : undefined
+  }
   const users = readUsers()
   const index = users.findIndex((u) => u.id === id)
   if (index === -1) return undefined
@@ -71,9 +112,19 @@ export async function createUser(
   password: string,
   leetcodeUsername: string,
 ): Promise<User> {
-  const users = readUsers()
-  const id = crypto.randomUUID()
   const passwordHash = await bcrypt.hash(password, 12)
+  const id = crypto.randomUUID()
+  if (hasDatabase) {
+    const { data, error } = await supabase!.from('users').insert({
+      id,
+      username,
+      password_hash: passwordHash,
+      leetcode_username: leetcodeUsername,
+    }).select('*').single()
+    if (error) throw error
+    return fromRow(data as UserRow)
+  }
+  const users = readUsers()
   const user: User = {
     id,
     username,

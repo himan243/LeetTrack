@@ -33,7 +33,7 @@ LeetTrack is a personal LeetCode progress tracker built as a clean, opinionated 
 - **UI** — React 19, Tailwind CSS v4, [Lucide React](https://lucide.dev) icons
 - **Fonts** — DM Sans + Space Grotesk (via `next/font`)
 - **Auth** — Custom server-side auth with bcrypt + JWT sessions via `jose`
-- **Storage** — File-based user store (JSON) — no external database required
+- **Storage** — Supabase Postgres in production, JSON fallback for local development
 
 ## Getting Started
 
@@ -52,12 +52,24 @@ npm install
 
 ### Environment Variables
 
-Create a `.env.local` file in the project root:
+Create a `.env.local` file in the project root for local development:
 
 ```bash
 # Generate with: openssl rand -base64 32
 SESSION_SECRET=your_secret_key_here
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
+
+### Supabase setup
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. Open the Supabase SQL Editor and run [`supabase/schema.sql`](./supabase/schema.sql).
+3. Copy the project URL and service role key from Project Settings → API.
+4. Add `SESSION_SECRET`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` to Vercel under Project Settings → Environment Variables.
+5. Redeploy the project.
+
+The service role key is server-only. Never expose it through a `NEXT_PUBLIC_` variable or client component.
 
 ### Run the Development Server
 
@@ -91,7 +103,8 @@ src/
     │   └── auth.ts         # Server Actions — login, signup, logout
     └── lib/
         ├── session.ts      # JWT encrypt/decrypt + cookie management
-        ├── users.ts        # User store (file-based)
+        ├── database.ts     # Supabase server client
+        ├── users.ts        # Supabase user repository with local fallback
         └── problems.ts     # Curated problem dataset
 ```
 
