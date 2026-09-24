@@ -1,7 +1,7 @@
 'use server'
 
 import { requireAuth } from '@/app/lib/session'
-import { findUserById, updateUser, type LeetCodeStats } from '@/app/lib/users'
+import { findUserById, isUserAdmin, updateUser, type LeetCodeStats } from '@/app/lib/users'
 
 export type SyncResult =
   | { ok: true; stats: LeetCodeStats; syncedAt: string; username: string }
@@ -46,13 +46,24 @@ type ProfileResponse = {
   }
 }
 
-export async function syncLeetCode(): Promise<SyncResult> {
+export async function syncUserLeetCode(targetUserId: string): Promise<SyncResult> {
   const session = await requireAuth()
-  const user = await findUserById(session.userId)
-  const username = user?.leetcodeUsername?.trim()
+  const caller = await findUserById(session.userId)
+  const isAdmin = isUserAdmin(caller)
+
+  if (!isAdmin && session.userId !== targetUserId) {
+    return { ok: false, message: 'Forbidden: Admin permissions required.' }
+  }
+
+  const targetUser = await findUserById(targetUserId)
+  if (!targetUser) {
+    return { ok: false, message: 'User not found.' }
+  }
+
+  const username = targetUser.leetcodeUsername?.trim()
 
   if (!username) {
-    return { ok: false, message: 'Add your LeetCode username in Settings before syncing.' }
+    return { ok: false, message: `User "${targetUser.username}" has not set a LeetCode handle.` }
   }
 
   try {
@@ -94,14 +105,19 @@ export async function syncLeetCode(): Promise<SyncResult> {
       mediumTotal: totals.Medium ?? 0,
       hardTotal: totals.Hard ?? 0,
       ranking: matchedUser.profile?.ranking,
-      solvedProblemSlugs: [...new Set([...(user?.leetcodeStats?.solvedProblemSlugs ?? []), ...recentSlugs])],
-      activityDates: [...new Set([...(user?.leetcodeStats?.activityDates ?? []), ...recentActivityDates])],
+      solvedProblemSlugs: [...new Set([...(targetUser.leetcodeStats?.solvedProblemSlugs ?? []), ...recentSlugs])],
+      activityDates: [...new Set([...(targetUser.leetcodeStats?.activityDates ?? []), ...recentActivityDates])],
     }
     const syncedAt = new Date().toISOString()
-    await updateUser(session.userId, { leetcodeStats: stats, lastSyncedAt: syncedAt })
+    await updateUser(targetUserId, { leetcodeStats: stats, lastSyncedAt: syncedAt })
 
     return { ok: true, stats, syncedAt, username: matchedUser.username }
   } catch {
     return { ok: false, message: 'Unable to reach LeetCode right now. Check your connection and try again.' }
   }
 }
+
+export async function syncLeetCode(): Promise<SyncResult> {
+  const session = await requireAuth()
+  return syncUserLeetCode(session.userId)
+}

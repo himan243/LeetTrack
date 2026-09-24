@@ -2,8 +2,8 @@ import Link from 'next/link'
 import { getSession } from '@/app/lib/session'
 import { findUserById, getAllUsers, isUserAdmin } from '@/app/lib/users'
 import ThemeToggle from '@/app/theme-toggle'
+import AdminUserTable from './admin-user-table'
 import {
-  ArrowUpRight,
   CheckCircle2,
   Clock,
   Gauge,
@@ -130,91 +130,7 @@ export default async function AdminPage() {
             </div>
           </div>
 
-          <div className="panel" style={{ padding: '24px' }}>
-            <div className="panel-heading" style={{ marginBottom: '20px' }}>
-              <div>
-                <span className="sidebar-label" style={{ padding: 0 }}>User Database</span>
-                <h2>Registered Users ({totalUsers})</h2>
-              </div>
-            </div>
-
-            <div className="problem-table-wrap" style={{ border: 'none' }}>
-              <table className="problem-table">
-                <thead>
-                  <tr>
-                    <th className="col-id">User</th>
-                    <th className="col-title">LeetCode Handle</th>
-                    <th className="col-diff">Total Solved</th>
-                    <th className="col-topic">Easy / Med / Hard</th>
-                    <th className="col-title">Last Synced</th>
-                    <th className="col-link">Profile</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allUsers.map((u) => {
-                    const stats = u.leetcodeStats
-                    const solved = stats?.totalSolved ?? 0
-                    const easy = stats?.easySolved ?? 0
-                    const medium = stats?.mediumSolved ?? 0
-                    const hard = stats?.hardSolved ?? 0
-
-                    return (
-                      <tr key={u.id} className="problem-row">
-                        <td className="col-id" style={{ fontWeight: 700 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div className="avatar avatar-small">{u.username.slice(0, 2).toUpperCase()}</div>
-                            <div>
-                              <div style={{ color: 'var(--ink)' }}>{u.username}</div>
-                              {u.isAdmin && (
-                                <span className="nav-count" style={{ fontSize: '9px', padding: '1px 6px' }}>ADMIN</span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="col-title">
-                          {u.leetcodeUsername ? (
-                            <span style={{ fontFamily: 'monospace', fontSize: '13px' }}>{u.leetcodeUsername}</span>
-                          ) : (
-                            <span style={{ color: 'var(--muted)', fontStyle: 'italic', fontSize: '12px' }}>Not configured</span>
-                          )}
-                        </td>
-                        <td className="col-diff">
-                          <strong style={{ fontSize: '15px', fontFamily: 'var(--font-space-grotesk), sans-serif' }}>
-                            {solved}
-                          </strong>
-                        </td>
-                        <td className="col-topic">
-                          <div style={{ display: 'flex', gap: '6px', fontSize: '11px' }}>
-                            <span className="difficulty-badge easy">{easy} E</span>
-                            <span className="difficulty-badge medium">{medium} M</span>
-                            <span className="difficulty-badge hard">{hard} H</span>
-                          </div>
-                        </td>
-                        <td className="col-title" style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                          {u.lastSyncedAt ? new Date(u.lastSyncedAt).toLocaleString() : 'Never'}
-                        </td>
-                        <td className="col-link">
-                          {u.leetcodeUsername ? (
-                            <a
-                              href={`https://leetcode.com/u/${u.leetcodeUsername}/`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="row-ext-link"
-                              aria-label={`Open ${u.username}'s LeetCode profile`}
-                            >
-                              <ArrowUpRight size={15} />
-                            </a>
-                          ) : (
-                            <span style={{ color: 'var(--line)' }}>—</span>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <AdminUserTable initialUsers={allUsers} />
         </div>
       </section>
     </main>
