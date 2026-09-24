@@ -60,7 +60,12 @@ export async function signup(_state: AuthState, formData: FormData): Promise<Aut
     return { errors: { username: ['That username is already taken.'] } }
   }
 
-  const user = await createUser(username, password, leetcodeUsername ?? '')
+  let user
+  try {
+    user = await createUser(username, password, leetcodeUsername ?? '')
+  } catch {
+    return { errors: { form: ['Account storage is not configured for this deployment. Add a hosted database before creating new accounts.'] } }
+  }
   await createSession(user.id, user.username)
   redirect('/')
 }

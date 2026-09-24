@@ -20,35 +20,69 @@ import {
   X,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { logout } from '@/app/actions/auth'
+import { syncLeetCode } from '@/app/actions/leetcode'
+import type { LeetCodeStats } from '@/app/lib/users'
+import { problems } from '@/app/lib/problems'
+import ThemeToggle from './theme-toggle'
 
-const recommendations = [
-  { title: 'Valid Parentheses', id: '20', difficulty: 'Easy', topic: 'Stack', reason: 'Build your fundamentals' },
-  { title: 'Binary Tree Level Order Traversal', id: '102', difficulty: 'Medium', topic: 'Trees', reason: 'Good next step for you' },
-  { title: 'Word Ladder', id: '127', difficulty: 'Hard', topic: 'BFS', reason: 'Stretch your graph skills' },
-]
+const recommendations = problems.map((problem) => ({
+  ...problem,
+  reason: problem.difficulty === 'Easy'
+    ? 'Build your fundamentals'
+    : problem.difficulty === 'Medium'
+      ? 'Good next step for you'
+      : 'Stretch your problem-solving skills',
+}))
 
-const bars = [38, 58, 44, 72, 54, 88, 61, 95, 76, 48, 82, 68]
-
-export default function DashboardClient({ username }: { username: string }) {
+export default function DashboardClient({ username, leetcodeUsername, stats: initialStats, lastSyncedAt: initialLastSyncedAt }: { username: string; leetcodeUsername: string; stats?: LeetCodeStats; lastSyncedAt?: string }) {
   const [activeDifficulty, setActiveDifficulty] = useState('All')
-  const [completed, setCompleted] = useState<string[]>([])
-  const [isSyncing, setIsSyncing] = useState(false)
+  const [completed, setCompleted] = useState<number[]>([])
+  const [isSyncing, startSync] = useTransition()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [stats, setStats] = useState(initialStats)
+  const [lastSyncedAt, setLastSyncedAt] = useState(initialLastSyncedAt)
+  const [syncMessage, setSyncMessage] = useState('')
 
   const initials = username.slice(0, 2).toUpperCase()
 
-  const visibleRecommendations = recommendations.filter((problem) => {
-    return activeDifficulty === 'All' || problem.difficulty === activeDifficulty
-  })
-
   function syncProgress() {
-    setIsSyncing(true)
-    window.setTimeout(() => setIsSyncing(false), 900)
+    setSyncMessage('')
+    startSync(async () => {
+      const result = await syncLeetCode()
+      if (result.ok) {
+        setStats(result.stats)
+        setLastSyncedAt(result.syncedAt)
+        setSyncMessage(`Synced ${result.username}`)
+      } else {
+        setSyncMessage(result.message)
+      }
+    })
   }
 
-  function toggleComplete(problemId: string) {
+  const totalSolved = stats?.totalSolved ?? 0
+  const solvedProblemSlugs = new Set(stats?.solvedProblemSlugs ?? [])
+  const totalProblems = (stats?.easyTotal ?? 0) + (stats?.mediumTotal ?? 0) + (stats?.hardTotal ?? 0)
+  const progress = totalProblems ? (totalSolved / totalProblems) * 100 : 0
+  const milestoneTarget = 200
+  const milestoneProgress = Math.min((totalSolved / milestoneTarget) * 100, 100)
+  const { currentStreak, bestStreak } = getStreaks(stats?.activityDates ?? [])
+  const thisWeekSolved = countThisWeek(stats?.activityDates ?? [])
+  const activityGrid = buildActivityGrid(stats?.activityDates ?? [])
+  const easyShare = totalSolved ? ((stats?.easySolved ?? 0) / totalSolved) * 100 : 0
+  const mediumShare = totalSolved ? ((stats?.mediumSolved ?? 0) / totalSolved) * 100 : 0
+  const hardShare = totalSolved ? ((stats?.hardSolved ?? 0) / totalSolved) * 100 : 0
+  const donutStyle = {
+    background: `conic-gradient(var(--mint) 0 ${easyShare}%, var(--coral) ${easyShare}% ${easyShare + mediumShare}%, var(--ink) ${easyShare + mediumShare}% ${easyShare + mediumShare + hardShare}%)`,
+  }
+  const syncLabel = lastSyncedAt ? `Last synced ${new Date(lastSyncedAt).toLocaleString()}` : 'Not synced yet'
+  const visibleRecommendations = recommendations.filter((problem) => {
+    const matchesDifficulty = activeDifficulty === 'All' || problem.difficulty === activeDifficulty
+    return matchesDifficulty && !solvedProblemSlugs.has(problem.slug)
+  }).slice(0, 6)
+
+  function toggleComplete(problemId: number) {
     setCompleted((current) =>
       current.includes(problemId)
         ? current.filter((id) => id !== problemId)
@@ -97,18 +131,18 @@ export default function DashboardClient({ username }: { username: string }) {
         </div>
 
         <div className="sidebar-bottom">
-          <a className="side-link" href="#settings">
+          <Link className="side-link" href="/settings">
             <Settings2 size={17} /> Settings
-          </a>
+          </Link>
           <div className="profile-mini">
             <div className="avatar">{initials}</div>
             <div>
               <strong>{username}</strong>
               <span>LeetCode connected</span>
             </div>
-            <form action={logout} style={{ marginLeft: 'auto' }}>
-              <button type="submit" className="icon-button" aria-label="Log out" title="Log out">
-                <LogOut size={15} />
+            <form action={logout} className="logout-form">
+              <button type="submit" className="logout-button">
+                <LogOut size={14} /> Log out
               </button>
             </form>
           </div>
@@ -126,7 +160,8 @@ export default function DashboardClient({ username }: { username: string }) {
             <strong>Overview</strong>
           </div>
           <div className="topbar-actions">
-            <button className="sync-button" onClick={syncProgress} disabled={isSyncing}>
+            <ThemeToggle />
+            <button className="sync-button" onClick={syncProgress} disabled={isSyncing || !leetcodeUsername} title={!leetcodeUsername ? 'Add your LeetCode username in Settings first' : undefined}>
               <RefreshCw size={15} className={isSyncing ? 'spin' : ''} /> {isSyncing ? 'Syncing' : 'Sync progress'}
             </button>
             <button className="icon-button" aria-label="Search">
@@ -154,57 +189,41 @@ export default function DashboardClient({ username }: { username: string }) {
                 <Flame size={27} fill="currentColor" />
               </div>
               <div>
-                <strong>14 days</strong>
+                <strong>{currentStreak} days</strong>
                 <span>current streak</span>
               </div>
               <div className="streak-divider" />
               <div>
-                <strong>28 days</strong>
+                <strong>{bestStreak} days</strong>
                 <span>best streak</span>
               </div>
             </div>
           </section>
 
           <section className="metric-grid" aria-label="Progress summary">
-            <MetricCard label="Solved problems" value="184" trend="+12 this month" icon={<Check size={18} />} tone="mint" />
-            <MetricCard label="Total progress" value="36.8%" trend="184 of 500 solved" icon={<Trophy size={18} />} tone="gold" progress={36.8} />
-            <MetricCard label="This week" value="9" trend="3 more than last week" icon={<Sparkles size={18} />} tone="coral" />
+            <MetricCard label="Solved problems" value={String(totalSolved)} trend={stats ? 'From LeetCode profile' : 'Connect your profile to begin'} icon={<Check size={18} />} tone="mint" />
+            <MetricCard label="Total progress" value={`${progress.toFixed(1)}%`} trend={totalProblems ? `${totalSolved} of ${totalProblems} solved` : 'Waiting for first sync'} icon={<Trophy size={18} />} tone="gold" progress={progress} />
+            <MetricCard label="This week" value={String(thisWeekSolved)} trend="Accepted submissions" icon={<Sparkles size={18} />} tone="coral" />
           </section>
 
           <section className="dashboard-grid">
             <div className="panel activity-panel" id="activity">
               <div className="panel-heading">
                 <div>
-                  <p className="section-kicker">Momentum</p>
+                  <p className="section-kicker">Activity</p>
                   <h2>Your solving rhythm</h2>
                 </div>
                 <button className="select-button">
                   Last 12 weeks <ChevronDown size={15} />
                 </button>
               </div>
-              <div className="chart-wrap">
-                <div className="chart-y-labels">
-                  <span>10</span>
-                  <span>5</span>
-                  <span>0</span>
-                </div>
-                <div className="bar-chart" aria-label="Bar chart showing weekly solved problems">
-                  {bars.map((height, index) => (
-                    <div className="bar-column" key={index}>
-                      <div className="bar" style={{ height: `${height}%` }} />
-                    </div>
-                  ))}
+              <div className="activity-grid-wrap">
+                <div className="activity-months" aria-hidden="true"><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div>
+                <div className="activity-grid" aria-label="GitHub-style activity grid showing accepted submissions">
+                  {activityGrid.map((day) => <span key={day.date} className={`activity-cell level-${day.level}`} title={`${day.date}: ${day.level ? 'Solved a problem' : 'No activity'}`} />)}
                 </div>
               </div>
-              <div className="chart-caption">
-                <span>
-                  <i className="legend-dot" />
-                  Problems solved
-                </span>
-                <span>
-                  Average <strong>7.4 / week</strong>
-                </span>
-              </div>
+              <div className="chart-caption"><span><i className="legend-dot" /> Accepted activity</span><span>{stats?.activityDates?.length ?? 0} active days</span></div>
             </div>
 
             <div className="panel breakdown-panel">
@@ -218,17 +237,17 @@ export default function DashboardClient({ username }: { username: string }) {
                 </button>
               </div>
               <div className="donut-wrap">
-                <div className="donut">
+                <div className="donut" style={donutStyle}>
                   <div>
-                    <strong>184</strong>
+                    <strong>{totalSolved}</strong>
                     <span>solved</span>
                   </div>
                 </div>
               </div>
               <div className="difficulty-list">
-                <DifficultyRow label="Easy" value="92" percent="50%" color="var(--mint)" />
-                <DifficultyRow label="Medium" value="76" percent="41%" color="var(--coral)" />
-                <DifficultyRow label="Hard" value="16" percent="9%" color="var(--ink)" />
+                <DifficultyRow label="Easy" value={String(stats?.easySolved ?? 0)} percent={stats?.easyTotal ? `${Math.round(((stats.easySolved ?? 0) / stats.easyTotal) * 100)}%` : '—'} color="var(--mint)" />
+                <DifficultyRow label="Medium" value={String(stats?.mediumSolved ?? 0)} percent={stats?.mediumTotal ? `${Math.round(((stats.mediumSolved ?? 0) / stats.mediumTotal) * 100)}%` : '—'} color="var(--coral)" />
+                <DifficultyRow label="Hard" value={String(stats?.hardSolved ?? 0)} percent={stats?.hardTotal ? `${Math.round(((stats.hardSolved ?? 0) / stats.hardTotal) * 100)}%` : '—'} color="var(--ink)" />
               </div>
             </div>
           </section>
@@ -240,17 +259,17 @@ export default function DashboardClient({ username }: { username: string }) {
               </div>
               <div>
                 <p className="section-kicker">Next milestone</p>
-                <h2>200 problems solved</h2>
-                <span>16 more to unlock your next badge</span>
+                <h2>{milestoneTarget} problems solved</h2>
+                <span>{Math.max(milestoneTarget - totalSolved, 0)} more to unlock your next badge</span>
               </div>
             </div>
             <div className="milestone-track">
               <div className="milestone-line">
-                <span style={{ width: '92%' }} />
+                <span style={{ width: `${milestoneProgress}%` }} />
               </div>
               <div className="milestone-numbers">
-                <span>184</span>
-                <strong>200</strong>
+                <span>{totalSolved}</span>
+                <strong>{milestoneTarget}</strong>
               </div>
             </div>
             <button className="arrow-button" aria-label="View milestone">
@@ -281,19 +300,19 @@ export default function DashboardClient({ username }: { username: string }) {
               ))}
             </div>
             <div className="recommendation-grid">
-              {visibleRecommendations.map((problem) => (
+              {visibleRecommendations.length > 0 ? visibleRecommendations.map((problem) => (
                 <RecommendationCard
                   key={problem.id}
                   problem={problem}
                   completed={completed.includes(problem.id)}
                   onComplete={() => toggleComplete(problem.id)}
                 />
-              ))}
+              )) : <p className="recommendation-empty">No unsolved recommendations in this difficulty yet. View the full problem list to choose another.</p>}
             </div>
           </section>
 
           <footer className="footer-note">
-            <span>Last synced 8 minutes ago</span>
+            <span>{syncMessage || syncLabel}</span>
             <span className="footer-dot" />
             <span>
               Data from{' '}
@@ -336,6 +355,61 @@ function MetricCard({
       <div className="metric-trend">{trend}</div>
     </article>
   )
+}
+
+function getStreaks(activityDates: string[]) {
+  const dates = new Set(activityDates)
+  const today = new Date()
+  const formatDate = (date: Date) => date.toISOString().slice(0, 10)
+  let currentStreak = 0
+  const cursor = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+
+  while (dates.has(formatDate(cursor))) {
+    currentStreak += 1
+    cursor.setUTCDate(cursor.getUTCDate() - 1)
+  }
+
+  const sortedDates = [...dates].sort()
+  let bestStreak = 0
+  let runningStreak = 0
+  let previousDate = ''
+
+  for (const date of sortedDates) {
+    const currentDate = new Date(`${date}T00:00:00Z`)
+    const previous = previousDate ? new Date(`${previousDate}T00:00:00Z`) : null
+    const dayGap = previous ? Math.round((currentDate.getTime() - previous.getTime()) / 86400000) : 0
+    runningStreak = dayGap === 1 ? runningStreak + 1 : 1
+    bestStreak = Math.max(bestStreak, runningStreak)
+    previousDate = date
+  }
+
+  return { currentStreak, bestStreak }
+}
+
+function countThisWeek(activityDates: string[]) {
+  const today = new Date()
+  const dayOfWeek = today.getDay()
+  const startOfWeek = new Date(today)
+  startOfWeek.setHours(0, 0, 0, 0)
+  startOfWeek.setDate(today.getDate() - dayOfWeek)
+  const startDate = startOfWeek.toISOString().slice(0, 10)
+  const endDate = today.toISOString().slice(0, 10)
+  return activityDates.filter((date) => date >= startDate && date <= endDate).length
+}
+
+function buildActivityGrid(activityDates: string[]) {
+  const activeDates = new Set(activityDates)
+  const today = new Date()
+  const end = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+  const start = new Date(end)
+  start.setUTCDate(start.getUTCDate() - 83)
+
+  return Array.from({ length: 84 }, (_, index) => {
+    const date = new Date(start)
+    date.setUTCDate(start.getUTCDate() + index)
+    const formatted = date.toISOString().slice(0, 10)
+    return { date: formatted, level: activeDates.has(formatted) ? 1 : 0 }
+  })
 }
 
 function DifficultyRow({
@@ -391,7 +465,7 @@ function RecommendationCard({
           {problem.topic} <span className="footer-dot" /> #{problem.id}
         </span>
         <a
-          href={`https://leetcode.com/problems/${problem.title.toLowerCase().replaceAll(' ', '-')}/`}
+          href={`https://leetcode.com/problems/${problem.slug}/`}
           target="_blank"
           rel="noreferrer"
           aria-label={`Open ${problem.title} on LeetCode`}

@@ -7,7 +7,7 @@ export type Problem = {
   tags: string[]
 }
 
-export const problems: Problem[] = [
+const problemCatalog: Problem[] = [
   // Arrays & Hashing
   { id: 1, title: 'Two Sum', slug: 'two-sum', difficulty: 'Easy', topic: 'Arrays & Hashing', tags: ['Array', 'Hash Table'] },
   { id: 217, title: 'Contains Duplicate', slug: 'contains-duplicate', difficulty: 'Easy', topic: 'Arrays & Hashing', tags: ['Array', 'Hash Table'] },
@@ -199,6 +199,68 @@ export const problems: Problem[] = [
   { id: 75, title: 'Sort Colors', slug: 'sort-colors', difficulty: 'Medium', topic: 'Sorting', tags: ['Array', 'Sorting', 'Two Pointers'] },
   { id: 148, title: 'Sort List', slug: 'sort-list', difficulty: 'Medium', topic: 'Sorting', tags: ['Divide and Conquer', 'Linked List', 'Merge Sort', 'Sorting', 'Two Pointers'] },
   { id: 315, title: 'Count of Smaller Numbers After Self', slug: 'count-of-smaller-numbers-after-self', difficulty: 'Hard', topic: 'Sorting', tags: ['Array', 'Binary Indexed Tree', 'Binary Search', 'Divide and Conquer', 'Merge Sort', 'Segment Tree', 'Sorting'] },
+
+  // Additional interview fundamentals
+  { id: 1, title: 'Two Sum', slug: 'two-sum', difficulty: 'Easy', topic: 'Arrays & Hashing', tags: ['Array', 'Hash Table'] },
+  { id: 169, title: 'Majority Element', slug: 'majority-element', difficulty: 'Easy', topic: 'Arrays & Hashing', tags: ['Array', 'Hash Table', 'Divide and Conquer', 'Sorting'] },
+  { id: 219, title: 'Contains Duplicate II', slug: 'contains-duplicate-ii', difficulty: 'Easy', topic: 'Arrays & Hashing', tags: ['Array', 'Hash Table', 'Sliding Window'] },
+  { id: 128, title: 'Longest Consecutive Sequence', slug: 'longest-consecutive-sequence', difficulty: 'Medium', topic: 'Arrays & Hashing', tags: ['Array', 'Hash Table'] },
+  { id: 271, title: 'Encode and Decode Strings', slug: 'encode-and-decode-strings', difficulty: 'Medium', topic: 'Arrays & Hashing', tags: ['Array', 'String'] },
+  { id: 18, title: '4Sum', slug: '4sum', difficulty: 'Medium', topic: 'Two Pointers', tags: ['Array', 'Sorting', 'Two Pointers'] },
+  { id: 209, title: 'Minimum Size Subarray Sum', slug: 'minimum-size-subarray-sum', difficulty: 'Medium', topic: 'Sliding Window', tags: ['Array', 'Binary Search', 'Prefix Sum', 'Sliding Window'] },
+  { id: 239, title: 'Sliding Window Maximum', slug: 'sliding-window-maximum', difficulty: 'Hard', topic: 'Sliding Window', tags: ['Array', 'Deque', 'Queue', 'Sliding Window'] },
+  { id: 84, title: 'Largest Rectangle in Histogram', slug: 'largest-rectangle-in-histogram', difficulty: 'Hard', topic: 'Stack', tags: ['Array', 'Monotonic Stack', 'Stack'] },
+  { id: 225, title: 'Implement Stack using Queues', slug: 'implement-stack-using-queues', difficulty: 'Easy', topic: 'Stack', tags: ['Design', 'Queue', 'Stack'] },
+  { id: 232, title: 'Implement Queue using Stacks', slug: 'implement-queue-using-stacks', difficulty: 'Easy', topic: 'Stack', tags: ['Design', 'Queue', 'Stack'] },
+  { id: 981, title: 'Time Based Key-Value Store', slug: 'time-based-key-value-store', difficulty: 'Medium', topic: 'Binary Search', tags: ['Binary Search', 'Design', 'Hash Table'] },
+  { id: 34, title: 'Find First and Last Position of Element in Sorted Array', slug: 'find-first-and-last-position-of-element-in-sorted-array', difficulty: 'Medium', topic: 'Binary Search', tags: ['Array', 'Binary Search'] },
+  { id: 153, title: 'Find Minimum in Rotated Sorted Array', slug: 'find-minimum-in-rotated-sorted-array', difficulty: 'Medium', topic: 'Binary Search', tags: ['Array', 'Binary Search'] },
+  { id: 23, title: 'Merge K Sorted Lists', slug: 'merge-k-sorted-lists', difficulty: 'Hard', topic: 'Linked List', tags: ['Divide and Conquer', 'Heap', 'Linked List', 'Merge Sort'] },
+  { id: 92, title: 'Reverse Linked List II', slug: 'reverse-linked-list-ii', difficulty: 'Medium', topic: 'Linked List', tags: ['Linked List'] },
+  { id: 138, title: 'Copy List with Random Pointer', slug: 'copy-list-with-random-pointer', difficulty: 'Medium', topic: 'Linked List', tags: ['Hash Table', 'Linked List'] },
+  { id: 234, title: 'Palindrome Linked List', slug: 'palindrome-linked-list', difficulty: 'Easy', topic: 'Linked List', tags: ['Linked List', 'Recursion', 'Stack', 'Two Pointers'] },
+  { id: 876, title: 'Middle of the Linked List', slug: 'middle-of-the-linked-list', difficulty: 'Easy', topic: 'Linked List', tags: ['Linked List', 'Two Pointers'] },
+  { id: 572, title: 'Subtree of Another Tree', slug: 'subtree-of-another-tree', difficulty: 'Easy', topic: 'Trees', tags: ['Binary Tree', 'DFS', 'Tree'] },
+  { id: 236, title: 'Lowest Common Ancestor of a Binary Tree', slug: 'lowest-common-ancestor-of-a-binary-tree', difficulty: 'Medium', topic: 'Trees', tags: ['Binary Tree', 'DFS', 'Tree'] },
+  { id: 105, title: 'Construct Binary Tree from Preorder and Inorder Traversal', slug: 'construct-binary-tree-from-preorder-and-inorder-traversal', difficulty: 'Medium', topic: 'Trees', tags: ['Array', 'Binary Tree', 'Divide and Conquer', 'Hash Table', 'Tree'] },
+  { id: 124, title: 'Binary Tree Maximum Path Sum', slug: 'binary-tree-maximum-path-sum', difficulty: 'Hard', topic: 'Trees', tags: ['Binary Tree', 'DFS', 'Dynamic Programming', 'Tree'] },
+  { id: 144, title: 'Binary Tree Preorder Traversal', slug: 'binary-tree-preorder-traversal', difficulty: 'Easy', topic: 'Trees', tags: ['Binary Tree', 'Stack', 'Tree'] },
+  { id: 994, title: 'Rotting Oranges', slug: 'rotting-oranges', difficulty: 'Medium', topic: 'Graphs', tags: ['Array', 'BFS', 'Matrix'] },
+  { id: 417, title: 'Pacific Atlantic Water Flow', slug: 'pacific-atlantic-water-flow', difficulty: 'Medium', topic: 'Graphs', tags: ['Array', 'BFS', 'DFS', 'Matrix'] },
+  { id: 127, title: 'Word Ladder', slug: 'word-ladder', difficulty: 'Hard', topic: 'Graphs', tags: ['BFS', 'Hash Table', 'String'] },
+  { id: 399, title: 'Evaluate Division', slug: 'evaluate-division', difficulty: 'Medium', topic: 'Graphs', tags: ['Array', 'DFS', 'Graph', 'Union Find'] },
+  { id: 743, title: 'Network Delay Time', slug: 'network-delay-time', difficulty: 'Medium', topic: 'Advanced Graphs', tags: ['BFS', 'Dijkstra', 'Graph', 'Heap'] },
+  { id: 1584, title: 'Min Cost to Connect All Points', slug: 'min-cost-to-connect-all-points', difficulty: 'Medium', topic: 'Advanced Graphs', tags: ['Array', 'Greedy', 'Minimum Spanning Tree', 'Union Find'] },
+  { id: 70, title: 'Climbing Stairs', slug: 'climbing-stairs', difficulty: 'Easy', topic: '1-D DP', tags: ['DP', 'Math', 'Memoization'] },
+  { id: 746, title: 'Min Cost Climbing Stairs', slug: 'min-cost-climbing-stairs', difficulty: 'Easy', topic: '1-D DP', tags: ['Array', 'DP'] },
+  { id: 213, title: 'House Robber II', slug: 'house-robber-ii', difficulty: 'Medium', topic: '1-D DP', tags: ['Array', 'DP'] },
+  { id: 91, title: 'Decode Ways', slug: 'decode-ways', difficulty: 'Medium', topic: '1-D DP', tags: ['DP', 'String'] },
+  { id: 139, title: 'Word Break', slug: 'word-break', difficulty: 'Medium', topic: '1-D DP', tags: ['Array', 'DP', 'Hash Table', 'String', 'Trie'] },
+  { id: 312, title: 'Burst Balloons', slug: 'burst-balloons', difficulty: 'Hard', topic: '2-D DP', tags: ['Array', 'DP'] },
+  { id: 72, title: 'Edit Distance', slug: 'edit-distance', difficulty: 'Medium', topic: '2-D DP', tags: ['DP', 'String'] },
+  { id: 621, title: 'Task Scheduler', slug: 'task-scheduler', difficulty: 'Medium', topic: 'Heap', tags: ['Array', 'Greedy', 'Hash Table', 'Heap', 'Sorting'] },
+  { id: 355, title: 'Design Twitter', slug: 'design-twitter', difficulty: 'Medium', topic: 'Heap', tags: ['Design', 'Hash Table', 'Heap', 'Linked List'] },
+  { id: 295, title: 'Find Median from Data Stream', slug: 'find-median-from-data-stream', difficulty: 'Hard', topic: 'Heap', tags: ['Data Stream', 'Design', 'Heap', 'Sorting'] },
+  { id: 78, title: 'Subsets', slug: 'subsets', difficulty: 'Medium', topic: 'Backtracking', tags: ['Array', 'Backtracking', 'Bit Manipulation'] },
+  { id: 46, title: 'Permutations', slug: 'permutations', difficulty: 'Medium', topic: 'Backtracking', tags: ['Array', 'Backtracking'] },
+  { id: 79, title: 'Word Search', slug: 'word-search', difficulty: 'Medium', topic: 'Backtracking', tags: ['Array', 'Backtracking', 'DFS', 'Matrix'] },
+  { id: 51, title: 'N-Queens', slug: 'n-queens', difficulty: 'Hard', topic: 'Backtracking', tags: ['Array', 'Backtracking'] },
+  { id: 53, title: 'Maximum Subarray', slug: 'maximum-subarray', difficulty: 'Medium', topic: 'Greedy', tags: ['Array', 'Divide and Conquer', 'DP'] },
+  { id: 55, title: 'Jump Game', slug: 'jump-game', difficulty: 'Medium', topic: 'Greedy', tags: ['Array', 'DP', 'Greedy'] },
+  { id: 45, title: 'Jump Game II', slug: 'jump-game-ii', difficulty: 'Medium', topic: 'Greedy', tags: ['Array', 'DP', 'Greedy'] },
+  { id: 56, title: 'Merge Intervals', slug: 'merge-intervals', difficulty: 'Medium', topic: 'Intervals', tags: ['Array', 'Sorting'] },
+  { id: 57, title: 'Insert Interval', slug: 'insert-interval', difficulty: 'Medium', topic: 'Intervals', tags: ['Array'] },
+  { id: 435, title: 'Non-overlapping Intervals', slug: 'non-overlapping-intervals', difficulty: 'Medium', topic: 'Intervals', tags: ['Array', 'DP', 'Greedy', 'Sorting'] },
+  { id: 202, title: 'Happy Number', slug: 'happy-number', difficulty: 'Easy', topic: 'Math & Geometry', tags: ['Hash Table', 'Math', 'Two Pointers'] },
+  { id: 48, title: 'Rotate Image', slug: 'rotate-image', difficulty: 'Medium', topic: 'Math & Geometry', tags: ['Array', 'Math', 'Matrix'] },
+  { id: 54, title: 'Spiral Matrix', slug: 'spiral-matrix', difficulty: 'Medium', topic: 'Math & Geometry', tags: ['Array', 'Matrix', 'Simulation'] },
+  { id: 136, title: 'Single Number', slug: 'single-number', difficulty: 'Easy', topic: 'Bit Manipulation', tags: ['Array', 'Bit Manipulation'] },
+  { id: 338, title: 'Counting Bits', slug: 'counting-bits', difficulty: 'Easy', topic: 'Bit Manipulation', tags: ['Bit Manipulation', 'DP'] },
+  { id: 75, title: 'Sort Colors', slug: 'sort-colors', difficulty: 'Medium', topic: 'Sorting', tags: ['Array', 'Sorting', 'Two Pointers'] },
 ]
+
+export const problems = Array.from(
+  new Map(problemCatalog.map((problem) => [problem.slug, problem])).values(),
+)
 
 export const TOPICS = [...new Set(problems.map((p) => p.topic))]

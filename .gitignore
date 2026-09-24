@@ -40,8 +40,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local user data store (excluded — contains hashed passwords)
-/data/
+# Seed user data is bundled for the initial Vercel deployment.
+# Move authentication to a hosted database before adding real users.
+/data/*
+!/data/
+!/data/users.json
 
 # allow env example but not actual env
 !.env.example

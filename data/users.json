@@ -1,0 +1,53 @@
+[
+  {
+    "id": "0ccceaa8-76d9-4d4b-b8ac-c513eda7f6df",
+    "username": "Mrhiman",
+    "passwordHash": "$2b$12$i94kkFBGCXuJS5o5NMZXNOc3SderjGYRIInTIV5C2eVtUo5zD4gYu",
+    "leetcodeUsername": "it7nIkR9FX",
+    "createdAt": "2026-09-24T17:11:11.559Z",
+    "leetcodeStats": {
+      "totalSolved": 22,
+      "easySolved": 22,
+      "mediumSolved": 0,
+      "hardSolved": 0,
+      "easyTotal": 966,
+      "mediumTotal": 2117,
+      "hardTotal": 977,
+      "ranking": 4306106,
+      "solvedProblemSlugs": [
+        "search-insert-position",
+        "palindrome-number",
+        "valid-anagram",
+        "build-array-from-permutation",
+        "best-time-to-buy-and-sell-stock",
+        "contains-duplicate",
+        "richest-customer-wealth",
+        "subtract-the-product-and-sum-of-digits-of-an-integer",
+        "fizz-buzz",
+        "convert-the-temperature",
+        "add-two-integers",
+        "sqrtx",
+        "kids-with-the-greatest-number-of-candies",
+        "running-sum-of-1d-array",
+        "majority-element",
+        "valid-parentheses",
+        "sign-of-the-product-of-an-array",
+        "remove-element",
+        "length-of-last-word",
+        "remove-duplicates-from-sorted-array",
+        "two-sum"
+      ],
+      "activityDates": [
+        "2026-09-24",
+        "2026-09-19",
+        "2026-09-17",
+        "2026-09-13",
+        "2026-02-12",
+        "2026-02-11",
+        "2026-02-05",
+        "2025-09-24"
+      ]
+    },
+    "lastSyncedAt": "2026-09-24T18:09:46.059Z"
+  }
+]

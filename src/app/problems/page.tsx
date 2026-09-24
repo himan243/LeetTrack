@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import {
   ArrowUpRight,
@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 import { problems, TOPICS, type Problem } from '@/app/lib/problems'
+import ThemeToggle from '@/app/theme-toggle'
 
 const DIFFICULTIES = ['All', 'Easy', 'Medium', 'Hard'] as const
 
@@ -25,7 +26,24 @@ export default function ProblemsPage() {
   const [difficulty, setDifficulty] = useState<string>('All')
   const [topic, setTopic] = useState<string>('All')
   const [solved, setSolved] = useState<Set<number>>(new Set())
+  const [syncedSolvedCount, setSyncedSolvedCount] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/me')
+      .then((response) => response.ok ? response.json() : null)
+      .then((profile: { totalSolved: number; solvedProblemSlugs: string[] } | null) => {
+        if (cancelled || !profile) return
+        setSyncedSolvedCount(profile.totalSolved)
+        const solvedIds = new Set(
+          problems.filter((problem) => profile.solvedProblemSlugs.includes(problem.slug)).map((problem) => problem.id),
+        )
+        setSolved(solvedIds)
+      })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [])
 
   const filtered = useMemo<Problem[]>(() => {
     return problems.filter((p) => {
@@ -42,7 +60,11 @@ export default function ProblemsPage() {
   function toggleSolved(id: number) {
     setSolved((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
       return next
     })
   }
@@ -78,9 +100,9 @@ export default function ProblemsPage() {
             <ListChecks size={17} /> Problem list{' '}
             <span className="nav-count">{totalCount}</span>
           </Link>
-          <a className="side-link" href="/#activity">
+          <Link className="side-link" href="/#activity">
             <BookOpen size={17} /> Activity
-          </a>
+          </Link>
         </nav>
 
         <div className="sidebar-label spaced-label">Your focus</div>
@@ -117,8 +139,9 @@ export default function ProblemsPage() {
             <strong>Problem List</strong>
           </div>
           <div className="topbar-actions">
+            <ThemeToggle />
             <div className="problems-solved-badge">
-              {solvedCount} / {totalCount} solved
+              {syncedSolvedCount || solvedCount} total / {solvedCount} in curriculum
             </div>
           </div>
         </header>
@@ -138,7 +161,7 @@ export default function ProblemsPage() {
 
             <div className="problems-progress-bar-wrap">
               <div className="problems-progress-numbers">
-                <span>{solvedCount} solved</span>
+                <span>{solvedCount} in curriculum</span>
                 <span>{totalCount - solvedCount} remaining</span>
               </div>
               <div className="problems-progress-track">
